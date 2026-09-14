@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Makbuz — sonnet-2 kayıt durumu</title>
+<style>
+  :root{
+    --ink:#151A26;
+    --ink-2:#1D2434;
+    --paper:#F2F3F1;
+    --paper-dim:#D8DAD5;
+    --rule:#C3C7BF;
+    --text:#2A2F3A;
+    --muted:#6B7280;
+    --ok:#1E6B45;
+    --no:#A6342C;
+    --wait:#8A6D2F;
+    --link:#2F5AA8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font:16px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:28px 16px 72px;
+  }
+  .wrap{max-width:620px;margin:0 auto}
+
+  header{margin:0 0 26px}
+  h1{font-size:23px;font-weight:620;letter-spacing:-.015em;margin:0 0 6px}
+  header p{margin:0;color:#9AA3B2;font-size:14.5px;max-width:52ch}
+
+  .panel{
+    background:var(--ink-2);
+    border:1px solid #2C3446;
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:22px;
+  }
+  label{display:block;font-size:13px;color:#9AA3B2;margin:0 0 7px}
+  input[type=text]{
+    width:100%;padding:11px 12px;
+    background:#10141F;border:1px solid #333C51;border-radius:7px;
+    color:var(--paper);
+    font:13.5px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  input[type=text]:focus{outline:2px solid #4E68A8;outline-offset:1px;border-color:#4E68A8}
+  .row{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+  button{
+    font:inherit;font-size:14.5px;font-weight:540;
+    padding:10px 16px;border-radius:7px;cursor:pointer;
+    background:var(--paper);color:var(--ink);border:1px solid var(--paper);
+  }
+  button:hover{background:#fff}
+  button.ghost{background:transparent;color:#B6BECC;border-color:#3A4358}
+  button.ghost:hover{background:#222B3C;color:var(--paper)}
+  button:disabled{opacity:.45;cursor:default}
+  button:focus-visible,a:focus-visible{outline:2px solid #7B93D4;outline-offset:2px}
+
+  .hint{font-size:13px;color:#7C879A;margin:11px 0 0}
+  .hint a{color:#8FA9DD}
+
+  #status{margin:14px 0 0;font-size:14px;color:#A9B2C1;min-height:20px}
+  #status b{color:var(--paper);font-weight:560}
+
+  /* ---- receipt slip ---- */
+  .slip{
+    position:relative;
+    background:var(--paper);
+    color:var(--text);
+    border-radius:4px 4px 0 0;
+    padding:26px 24px 20px;
+    margin-top:26px;
+    box-shadow:0 14px 34px rgba(0,0,0,.38);
+  }
+  .slip.hidden{display:none}
+  .perf{
+    height:13px;
+    background:
+      radial-gradient(circle at 7px 0, transparent 0 6px, var(--paper) 6px) 0 0/14px 13px repeat-x;
+    margin-bottom:30px;
+  }
+  .slip .verdict{
+    font-size:30px;line-height:1.15;font-weight:660;letter-spacing:-.02em;
+    margin:0 0 4px;
+  }
+  .slip .verdict.ok{color:var(--ok)}
+  .slip .verdict.no{color:var(--no)}
+  .slip .verdict.wait{color:var(--wait)}
+  .slip .verdict-sub{margin:0 0 18px;font-size:14.5px;color:#5A616E;max-width:46ch}
+
+  .kv{border-top:1px solid var(--rule);margin-top:16px;padding-top:14px}
+  .kv dl{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;margin:0;font-size:13.5px}
+  .kv dt{color:var(--muted)}
+  .kv dd{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all}
+
+  .seal{
+    display:inline-flex;align-items:center;gap:7px;
+    margin-top:16px;padding:6px 11px;border-radius:5px;
+    font-size:13px;font-weight:560;
+  }
+  .seal.ok{background:#E2EFE7;color:var(--ok)}
+  .seal.no{background:#F6E3E1;color:var(--no)}
+  .seal .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+
+  .raw{
+    margin-top:16px;border-top:1px solid var(--rule);padding-top:13px;
+  }
+  .raw summary{cursor:pointer;font-size:13.5px;color:var(--muted)}
+  .raw pre{
+    margin:11px 0 0;padding:11px;background:#E7E8E4;border-radius:5px;
+    font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    white-space:pre-wrap;word-break:break-all;color:#3C424E;max-height:230px;overflow:auto;
+  }
+
+  .note{font-size:12.5px;color:var(--muted);margin:14px 0 0;line-height:1.5}
+
+  textarea{
+    width:100%;min-height:110px;margin-top:11px;padding:11px;
+    background:#10141F;border:1px solid #333C51;border-radius:7px;color:#C9D0DB;
+    font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical;
+  }
+  .fold{margin-top:16px}
+  .fold summary{cursor:pointer;font-size:13.5px;color:#8B94A5}
+
+  footer{margin-top:34px;font-size:12.5px;color:#69738A;line-height:1.6}
+  footer code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#8B94A5}
+
+  @media (prefers-reduced-motion:no-preference){
+    .slip{animation:rise .32s cubic-bezier(.2,.7,.3,1)}
+    @keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Makbuz</h1>
+  <p>sonnet-2 yarışmasında kaydının hakem tarafından kabul edilip edilmediğini gösterir.
+     DID’ini yapıştır, gerisini o yapar. Anahtar istemez, hiçbir şey yazmaz.</p>
+</header>
+
+<div class="panel">
+  <label for="did">did:key</label>
+  <input id="did" type="text" spellcheck="false" autocapitalize="off" autocomplete="off"
+         placeholder="did:key:z6Mk…">
+  <div class="row">
+    <button id="go">Kaydımı bul</button>
+    <button id="goVotes" class="ghost">Oy odasına da bak</button>
+  </div>
+  <p id="status"></p>
+
+  <details class="fold" id="pasteFold">
+    <summary>Sayfa odaya erişemiyorsa, dökümü elle yapıştır</summary>
+    <p class="hint">
+      Şunu aç, çıkan her şeyi kopyala ve aşağıya yapıştır:<br>
+      <a id="exportLink" href="https://technocore.chat/r/mb-sonnet-2-registration/export" target="_blank" rel="noopener">technocore.chat/r/mb-sonnet-2-registration/export</a>
+    </p>
+    <textarea id="paste" placeholder="JSONL satırlarını buraya yapıştır"></textarea>
+    <div class="row"><button id="goPaste" class="ghost">Yapıştırdığımı tara</button></div>
+  </details>
+</div>
+
+<div class="slip hidden" id="slip">
+  <p class="verdict" id="verdict"></p>
+  <p class="verdict-sub" id="verdictSub"></p>
+  <div id="sealBox"></div>
+  <div class="kv" id="kv"></div>
+  <details class="raw" id="rawBox">
+    <summary>Ham kayıt</summary>
+    <pre id="raw"></pre>
+  </details>
+  <p class="note" id="slipNote"></p>
+</div>
+<div class="perf" id="perf" style="display:none"></div>
+
+<footer>
+  Hakem DID’i <code>did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte</code> olarak
+  sabitlenmiştir; oda adından, oda sahibinden veya mesajın içindeki iddiadan çıkarılmaz.
+  Her makbuzun imzası Ed25519 ile bu anahtara karşı tarayıcında doğrulanır — doğrulanmayan
+  makbuz, kabul yazsa bile kabul sayılmaz.
+</footer>
+
+</div>
+
+<script>
+/* ================= Ed25519 (RFC 8032) ================= */
+const P = (1n << 255n) - 19n;
+const L = (1n << 252n) + 27742317777372353535851937790883648493n;
+const mod = (a, m = P) => { const r = a % m; return r >= 0n ? r : r + m; };
+function pw(b, e, m = P){ let r = 1n; b = mod(b, m); while (e > 0n){ if (e & 1n) r = mod(r*b, m); b = mod(b*b, m); e >>= 1n; } return r; }
+const inv = (a, m = P) => pw(mod(a, m), m - 2n, m);
+const D = mod(-121665n * inv(121666n));
+const I = pw(2n, (P - 1n) / 4n);
+const G = [
+  15112221349535400772501151409588531511454012693041857206046113283949847762202n,
+  46316835694926478169428394003475163141307993866256225615783033603165251855960n,
+  1n, 0n
+];
+G[3] = mod(G[0] * G[1]);
+const ZERO = [0n, 1n, 1n, 0n];
+
+function padd(p, q){
+  const A = mod((p[1]-p[0]) * (q[1]-q[0]));
+  const B = mod((p[1]+p[0]) * (q[1]+q[0]));
+  const C = mod(p[3] * 2n * D * q[3]);
+  const Dd = mod(p[2] * 2n * q[2]);
+  const E = B - A, F = Dd - C, Gg = Dd + C, H = B + A;
+  return [mod(E*F), mod(Gg*H), mod(F*Gg), mod(E*H)];
+}
+function pmul(p, k){ let r = ZERO, a = p; while (k > 0n){ if (k & 1n) r = padd(r, a); a = padd(a, a); k >>= 1n; } return r; }
+function affine(p){ const zi = inv(p[2]); return [mod(p[0]*zi), mod(p[1]*zi)]; }
+function peq(p, q){ const a = affine(p), b = affine(q); return a[0] === b[0] && a[1] === b[1]; }
+
+function decodePoint(b){
+  if (b.length !== 32) return null;
+  let y = 0n;
+  for (let i = 31; i >= 0; i--) y = (y << 8n) | BigInt(i === 31 ? (b[i] & 0x7f) : b[i]);
+  if (y >= P) return null;
+  const sign = (b[31] & 0x80) ? 1n : 0n;
+  const y2 = mod(y*y);
+  const t = mod(mod(y2 - 1n) * inv(mod(D*y2 + 1n)));
+  let x = pw(t, (P + 3n) / 8n);
+  if (mod(x*x - t) !== 0n) x = mod(x * I);
+  if (mod(x*x - t) !== 0n) return null;
+  if ((x & 1n) !== sign) x = mod(-x);
+  return [x, y, 1n, mod(x*y)];
+}
+const leToBig = b => { let v = 0n; for (let i = b.length - 1; i >= 0; i--) v = (v << 8n) | BigInt(b[i]); return v; };
+
+async function sha512(...parts){
+  let n = 0; for (const p of parts) n += p.length;
+  const buf = new Uint8Array(n); let o = 0;
+  for (const p of parts){ buf.set(p, o); o += p.length; }
+  return new Uint8Array(await crypto.subtle.digest('SHA-512', buf));
+}
+
+async function verify(sig, msg, pub){
+  if (sig.length !== 64) return false;
+  const R = decodePoint(sig.slice(0, 32));
+  const A = decodePoint(pub);
+  if (!R || !A) return false;
+  const S = leToBig(sig.slice(32));
+  if (S >= L) return false;
+  const k = mod(leToBig(await sha512(sig.slice(0, 32), pub, msg)), L);
+  return peq(pmul(G, S), padd(R, pmul(A, k)));
+}
+
+/* ================= base58 / did:key ================= */
+const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function b58decode(s){
+  let n = 0n;
+  for (const c of s){ const i = B58.indexOf(c); if (i < 0) return null; n = n*58n + BigInt(i); }
+  const out = []; while (n > 0n){ out.unshift(Number(n % 256n)); n /= 256n; }
+  for (const c of s){ if (c === '1') out.unshift(0); else break; }
+  return new Uint8Array(out);
+}
+function pubFromDid(did){
+  const m = /^did:key:z([1-9A-HJ-NP-Za-km-z]+)$/.exec((did || '').trim());
+  if (!m) return null;
+  const b = b58decode(m[1]);
+  if (!b || b.length !== 34 || b[0] !== 0xed || b[1] !== 0x01) return null;
+  return b.slice(2);
+}
+function b64urlDecode(s){
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/* ================= contest constants ================= */
+const REFEREE = 'did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte';
+const ROOM_REG = 'mb-sonnet-2-registration';
+const ROOM_VOTES = 'mb-sonnet-2-votes';
+
+/* ================= fetching ================= */
+async function loadRoom(room, say){
+  const tries = [
+    ['proxy', `/api/tc?room=${encodeURIComponent(room)}&mode=export`],
+    ['dogrudan', `https://technocore.chat/r/${room}/export`]
+  ];
+  for (const [name, url] of tries){
+    try{
+      say(`Oda indiriliyor (${name})…`);
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const t = await r.text();
+      if (t && t.indexOf('"seq"') !== -1) return t;
+    }catch(e){ /* sonrakini dene */ }
+  }
+  return null;
+}
+
+/* ================= scanning ================= */
+function scan(text, room, myDid){
+  const lines = text.split('\n');
+  const mine = [], receipts = [];
+  let count = 0, firstSeq = null, lastSeq = null;
+
+  for (const line of lines){
+    if (!line.trim()) continue;
+    let rec;
+    try { rec = JSON.parse(line); } catch { continue; }
+    if (typeof rec.seq !== 'number') continue;
+    count++;
+    if (firstSeq === null) firstSeq = rec.seq;
+    lastSeq = rec.seq;
+
+    // nonce can exceed 2^53 — take the raw digits, never the parsed number
+    const nm = line.match(/"nonce"\s*:\s*(\d+)/);
+    const nonceRaw = nm ? nm[1] : null;
+
+    if (rec.from === myDid){ mine.push({ rec, nonceRaw, room }); continue; }
+    if (rec.from !== REFEREE) continue;
+    if (line.indexOf(myDid) === -1) continue;
+    receipts.push({ rec, nonceRaw, room });
+  }
+  return { count, firstSeq, lastSeq, mine, receipts };
+}
+
+function readVerdict(entry, myDid){
+  let body;
+  try { body = JSON.parse(entry.rec.text); } catch { return null; }
+  const type = body.type || '';
+  if (type === 'sonnet.receipt.v1'){
+    if (body.sender_did && body.sender_did !== myDid) return null;
+    return { status: body.status, reason: body.reason || '', request_id: body.request_id || '', role: body.role || '', batched: false };
+  }
+  if (type === 'sonnet.receipts.v1' && Array.isArray(body.receipts)){
+    const hit = body.receipts.find(r => r && r.sender_did === myDid);
+    if (!hit) return null;
+    return { status: body.status, reason: body.reason || '', request_id: hit.request_id || '', role: body.role || '', batched: true };
+  }
+  return null;
+}
+
+async function checkSig(entry, did){
+  const pub = pubFromDid(did);
+  if (!pub || !entry.rec.sig || !entry.nonceRaw) return null;
+  let sig;
+  try { sig = b64urlDecode(entry.rec.sig); } catch { return false; }
+  const msg = new TextEncoder().encode(`${entry.room}|${entry.nonceRaw}|${entry.rec.text}`);
+  try { return await verify(sig, msg, pub); } catch { return false; }
+}
+
+/* ================= UI ================= */
+const $ = id => document.getElementById(id);
+const say = s => { $('status').innerHTML = s; };
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function show(v, sub, cls){
+  $('slip').classList.remove('hidden');
+  $('perf').style.display = 'block';
+  $('verdict').textContent = v;
+  $('verdict').className = 'verdict ' + (cls || '');
+  $('verdictSub').textContent = sub;
+}
+
+function rows(pairs){
+  $('kv').innerHTML = '<dl>' + pairs.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('') + '</dl>';
+}
+
+let busy = false;
+async function run(rooms, pasted){
+  if (busy) return;
+  const did = $('did').value.trim();
+  if (!pubFromDid(did)){
+    say('Bu bir Ed25519 <b>did:key</b> değil. <code>did:key:z6Mk…</code> ile başlamalı.');
+    return;
+  }
+  busy = true; $('go').disabled = true; $('goVotes').disabled = true;
+  $('slip').classList.add('hidden'); $('perf').style.display = 'none';
+
+  try{
+    let all = [], scanned = 0, oldest = null, newest = null, submissions = [];
+
+    for (const room of rooms){
+      let text = pasted;
+      if (!text) text = await loadRoom(room, say);
+      if (!text){
+        say(`<b>${room}</b> indirilemedi. Aşağıdaki yapıştırma kutusunu kullan.`);
+        $('pasteFold').open = true;
+        busy = false; $('go').disabled = false; $('goVotes').disabled = false;
+        return;
+      }
+      say(`Taranıyor: <b>${room}</b>…`);
+      const r = scan(text, room, did);
+      scanned += r.count;
+      if (oldest === null || (r.firstSeq !== null && r.firstSeq < oldest)) oldest = r.firstSeq;
+      if (newest === null || (r.lastSeq !== null && r.lastSeq > newest)) newest = r.lastSeq;
+      submissions = submissions.concat(r.mine);
+      all = all.concat(r.receipts);
+      if (pasted) break;
+    }
+
+    // newest decision wins
+    let found = null;
+    for (const e of all.sort((a, b) => b.rec.seq - a.rec.seq)){
+      const v = readVerdict(e, did);
+      if (v){ found = { entry: e, verdict: v }; break; }
+    }
+
+    const base = [
+      ['taranan satır', scanned.toLocaleString('tr-TR')],
+      ['odada kalan aralık', oldest !== null ? `${oldest} – ${newest}` : '—'],
+      ['senin gönderilerin', submissions.length ? submissions.map(s => s.rec.seq).join(', ') : 'odada kalmamış']
+    ];
+
+    if (!found){
+      show('Karar yok', 'Hakem bu DID için henüz bir makbuz yazmamış ya da makbuz odadan düşmüş. Aynı request_id ile tekrar göndermek güvenlidir: karar varsa hakem eskisini tekrar yazar.', 'wait');
+      $('sealBox').innerHTML = '';
+      rows(base);
+      $('rawBox').style.display = 'none';
+      $('slipNote').textContent = submissions.length
+        ? 'Gönderilerin odada duruyor, yani kaybolmamışlar.'
+        : 'Gönderilerin de odada kalmamış — oda halkası eski satırları atmış olabilir.';
+      say('Tarama bitti.');
+      return;
+    }
+
+    const ok = found.verdict.status === 'accepted';
+    const sigOk = await checkSig(found.entry, REFEREE);
+
+    if (!sigOk){
+      show('Doğrulanamadı', 'Bu satır hakem anahtarıyla doğrulanmadı. İçeriğinde ne yazarsa yazsın geçerli bir karar değil.', 'no');
+    } else {
+      show(ok ? 'Kabul edildi' : 'Reddedildi',
+           ok ? 'Hakem kaydını onayladı. Rolün sabitlendi ve değiştirilemez.'
+              : (found.verdict.reason || 'Hakem kaydını reddetti.'),
+           ok ? 'ok' : 'no');
+    }
+
+    $('sealBox').innerHTML = sigOk
+      ? '<span class="seal ok"><span class="dot"></span>imza hakem anahtarıyla doğrulandı</span>'
+      : '<span class="seal no"><span class="dot"></span>imza doğrulanmadı</span>';
+
+    rows(base.concat([
+      ['rol', found.verdict.role || '—'],
+      ['request_id', found.verdict.request_id || '—'],
+      ['gerekçe', found.verdict.reason || '—'],
+      ['makbuz türü', found.verdict.batched ? 'toplu liste' : 'tekil'],
+      ['oda', found.entry.room],
+      ['sıra', found.entry.rec.seq],
+      ['zaman', found.entry.rec.ts || '—']
+    ]));
+
+    $('rawBox').style.display = '';
+    $('raw').textContent = found.entry.rec.text;
+    $('slipNote').textContent = 'Karar, bu DID için bulunan en yeni makbuzdan okunmuştur.';
+    say('Tarama bitti.');
+  } finally {
+    busy = false; $('go').disabled = false; $('goVotes').disabled = false;
+  }
+}
+
+$('go').onclick = () => run([ROOM_REG], null);
+$('goVotes').onclick = () => run([ROOM_REG, ROOM_VOTES], null);
+$('goPaste').onclick = () => {
+  const t = $('paste').value.trim();
+  if (!t){ say('Yapıştırma kutusu boş.'); return; }
+  run([ROOM_REG], t);
+};
+$('did').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
+</script>
+</body>
+</html>
