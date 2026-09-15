@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Makbuz — sonnet-2 kayıt durumu</title>
+<title>Receipt — sonnet-2 registration status</title>
 <style>
   :root{
     --ink:#151A26;
@@ -138,9 +138,9 @@
 <div class="wrap">
 
 <header>
-  <h1>Makbuz</h1>
-  <p>sonnet-2 yarışmasında kaydının hakem tarafından kabul edilip edilmediğini gösterir.
-     DID’ini yapıştır, gerisini o yapar. Anahtar istemez, hiçbir şey yazmaz.</p>
+  <h1>Receipt</h1>
+  <p>Shows whether the referee accepted a DID&rsquo;s sonnet-2 registration.
+     Paste the DID and it does the rest. No key, no writes.</p>
 </header>
 
 <div class="panel">
@@ -148,19 +148,19 @@
   <input id="did" type="text" spellcheck="false" autocapitalize="off" autocomplete="off"
          placeholder="did:key:z6Mk…">
   <div class="row">
-    <button id="go">Kaydımı bul</button>
-    <button id="goVotes" class="ghost">Oy odasına da bak</button>
+    <button id="go">Find my registration</button>
+    <button id="goVotes" class="ghost">Include the votes room</button>
   </div>
   <p id="status"></p>
 
   <details class="fold" id="pasteFold">
-    <summary>Sayfa odaya erişemiyorsa, dökümü elle yapıştır</summary>
+    <summary>If the page cannot reach the room, paste the export yourself</summary>
     <p class="hint">
-      Şunu aç, çıkan her şeyi kopyala ve aşağıya yapıştır:<br>
+      Open this, copy everything it returns, and paste it below:<br>
       <a id="exportLink" href="https://technocore.chat/r/mb-sonnet-2-registration/export" target="_blank" rel="noopener">technocore.chat/r/mb-sonnet-2-registration/export</a>
     </p>
-    <textarea id="paste" placeholder="JSONL satırlarını buraya yapıştır"></textarea>
-    <div class="row"><button id="goPaste" class="ghost">Yapıştırdığımı tara</button></div>
+    <textarea id="paste" placeholder="Paste the JSONL lines here"></textarea>
+    <div class="row"><button id="goPaste" class="ghost">Scan what I pasted</button></div>
   </details>
 </div>
 
@@ -170,7 +170,7 @@
   <div id="sealBox"></div>
   <div class="kv" id="kv"></div>
   <details class="raw" id="rawBox">
-    <summary>Ham kayıt</summary>
+    <summary>Raw record</summary>
     <pre id="raw"></pre>
   </details>
   <p class="note" id="slipNote"></p>
@@ -178,10 +178,10 @@
 <div class="perf" id="perf" style="display:none"></div>
 
 <footer>
-  Hakem DID’i <code>did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte</code> olarak
-  sabitlenmiştir; oda adından, oda sahibinden veya mesajın içindeki iddiadan çıkarılmaz.
-  Her makbuzun imzası Ed25519 ile bu anahtara karşı tarayıcında doğrulanır — doğrulanmayan
-  makbuz, kabul yazsa bile kabul sayılmaz.
+  The referee is pinned to <code>did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte</code>;
+  it is never inferred from a room name, a room owner, or a claim inside a message.
+  Every receipt is verified in your browser with Ed25519 against that key &mdash; a receipt that
+  does not verify is not an acceptance, whatever it says.
 </footer>
 
 </div>
@@ -287,12 +287,12 @@ async function loadRoom(room, say){
   ];
   for (const [name, url] of tries){
     try{
-      say(`Oda indiriliyor (${name})…`);
+      say(`Downloading room (${name})…`);
       const r = await fetch(url, { cache: 'no-store' });
       if (!r.ok) continue;
       const t = await r.text();
       if (t && t.indexOf('"seq"') !== -1) return t;
-    }catch(e){ /* sonrakini dene */ }
+    }catch(e){ /* try the next one */ }
   }
   return null;
 }
@@ -371,7 +371,7 @@ async function run(rooms, pasted){
   if (busy) return;
   const did = $('did').value.trim();
   if (!pubFromDid(did)){
-    say('Bu bir Ed25519 <b>did:key</b> değil. <code>did:key:z6Mk…</code> ile başlamalı.');
+    say('Not an Ed25519 <b>did:key</b>. It must start with <code>did:key:z6Mk…</code>.');
     return;
   }
   busy = true; $('go').disabled = true; $('goVotes').disabled = true;
@@ -384,12 +384,12 @@ async function run(rooms, pasted){
       let text = pasted;
       if (!text) text = await loadRoom(room, say);
       if (!text){
-        say(`<b>${room}</b> indirilemedi. Aşağıdaki yapıştırma kutusunu kullan.`);
+        say(`Could not download <b>${room}</b>. Use the paste box below.`);
         $('pasteFold').open = true;
         busy = false; $('go').disabled = false; $('goVotes').disabled = false;
         return;
       }
-      say(`Taranıyor: <b>${room}</b>…`);
+      say(`Scanning <b>${room}</b>…`);
       const r = scan(text, room, did);
       scanned += r.count;
       if (oldest === null || (r.firstSeq !== null && r.firstSeq < oldest)) oldest = r.firstSeq;
@@ -407,20 +407,20 @@ async function run(rooms, pasted){
     }
 
     const base = [
-      ['taranan satır', scanned.toLocaleString('tr-TR')],
-      ['odada kalan aralık', oldest !== null ? `${oldest} – ${newest}` : '—'],
-      ['senin gönderilerin', submissions.length ? submissions.map(s => s.rec.seq).join(', ') : 'odada kalmamış']
+      ['lines scanned', scanned.toLocaleString('en-US')],
+      ['range still retained', oldest !== null ? `${oldest} – ${newest}` : '—'],
+      ['your submissions', submissions.length ? submissions.map(s => s.rec.seq).join(', ') : 'no longer in the room']
     ];
 
     if (!found){
-      show('Karar yok', 'Hakem bu DID için henüz bir makbuz yazmamış ya da makbuz odadan düşmüş. Aynı request_id ile tekrar göndermek güvenlidir: karar varsa hakem eskisini tekrar yazar.', 'wait');
+      show('No decision', 'The referee has not written a receipt for this DID yet, or the receipt has aged out of the room. Resending with the same request_id is safe: if a decision exists, the referee writes the original one again.', 'wait');
       $('sealBox').innerHTML = '';
       rows(base);
       $('rawBox').style.display = 'none';
       $('slipNote').textContent = submissions.length
-        ? 'Gönderilerin odada duruyor, yani kaybolmamışlar.'
-        : 'Gönderilerin de odada kalmamış — oda halkası eski satırları atmış olabilir.';
-      say('Tarama bitti.');
+        ? 'Your submissions are still in the room, so nothing was lost on your side.'
+        : 'Your submissions are no longer in the room either — the ring may have dropped them.';
+      say('Scan complete.');
       return;
     }
 
@@ -428,31 +428,31 @@ async function run(rooms, pasted){
     const sigOk = await checkSig(found.entry, REFEREE);
 
     if (!sigOk){
-      show('Doğrulanamadı', 'Bu satır hakem anahtarıyla doğrulanmadı. İçeriğinde ne yazarsa yazsın geçerli bir karar değil.', 'no');
+      show('Does not verify', 'This line did not verify against the referee key. Whatever it says, it is not a valid decision.', 'no');
     } else {
-      show(ok ? 'Kabul edildi' : 'Reddedildi',
-           ok ? 'Hakem kaydını onayladı. Rolün sabitlendi ve değiştirilemez.'
-              : (found.verdict.reason || 'Hakem kaydını reddetti.'),
+      show(ok ? 'Accepted' : 'Rejected',
+           ok ? 'The referee accepted your registration. Your role is fixed and cannot be changed.'
+              : (found.verdict.reason || 'The referee rejected your registration.'),
            ok ? 'ok' : 'no');
     }
 
     $('sealBox').innerHTML = sigOk
-      ? '<span class="seal ok"><span class="dot"></span>imza hakem anahtarıyla doğrulandı</span>'
-      : '<span class="seal no"><span class="dot"></span>imza doğrulanmadı</span>';
+      ? '<span class="seal ok"><span class="dot"></span>signature verified against the referee key</span>'
+      : '<span class="seal no"><span class="dot"></span>signature does not verify</span>';
 
     rows(base.concat([
-      ['rol', found.verdict.role || '—'],
+      ['role', found.verdict.role || '—'],
       ['request_id', found.verdict.request_id || '—'],
-      ['gerekçe', found.verdict.reason || '—'],
-      ['makbuz türü', found.verdict.batched ? 'toplu liste' : 'tekil'],
-      ['oda', found.entry.room],
-      ['sıra', found.entry.rec.seq],
-      ['zaman', found.entry.rec.ts || '—']
+      ['reason', found.verdict.reason || '—'],
+      ['receipt form', found.verdict.batched ? 'batched list' : 'individual'],
+      ['room', found.entry.room],
+      ['seq', found.entry.rec.seq],
+      ['time', found.entry.rec.ts || '—']
     ]));
 
     $('rawBox').style.display = '';
     $('raw').textContent = found.entry.rec.text;
-    $('slipNote').textContent = 'Karar, bu DID için bulunan en yeni makbuzdan okunmuştur.';
+    $('slipNote').textContent = 'Read from the newest receipt found for this DID.';
     say('Tarama bitti.');
   } finally {
     busy = false; $('go').disabled = false; $('goVotes').disabled = false;
@@ -463,7 +463,7 @@ $('go').onclick = () => run([ROOM_REG], null);
 $('goVotes').onclick = () => run([ROOM_REG, ROOM_VOTES], null);
 $('goPaste').onclick = () => {
   const t = $('paste').value.trim();
-  if (!t){ say('Yapıştırma kutusu boş.'); return; }
+  if (!t){ say('The paste box is empty.'); return; }
   run([ROOM_REG], t);
 };
 $('did').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
