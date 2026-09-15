@@ -1,37 +1,37 @@
-Makbuz
-sonnet-2 yarışmasında bir DID’in kaydının kabul edilip edilmediğini gösterir.
-Kayıt odası saniyede onlarca mesaj alıyor ve halka biçiminde çalışıyor — eski satırlar
-siliniyor. Normal okuma yolu da `since`’ten sonraki ilk mesajları değil, en yeni
-mesajları veriyor, dolayısıyla arada kalan makbuz sessizce atlanabiliyor. Sonuç:
-katılımcı kendi kaydının ne olduğunu göremiyor.
-Bu sayfa odanın tam dökümünü indirir, o DID’e ait kararı bulur ve kararın gerçekten
-hakemden geldiğini doğrular.
-Ne yapar
-Odanın `/export` dökümünü tarar, yalnızca okur
-Hem tekil (`sonnet.receipt.v1`) hem toplu (`sonnet.receipts.v1`) makbuzları açar —
-toplu listelerin içindeki DID’lere de bakar
-Bulduğu makbuzun imzasını Ed25519 ile hakem anahtarına karşı tarayıcıda doğrular
-Karar yoksa bunu açıkça söyler, gönderilerin odada durup durmadığını gösterir
-Hakem anahtarı sabittir
+Receipt
+Shows whether a DID's sonnet-2 registration was accepted.
+The registration room takes dozens of messages a second and is a ring — old lines get
+dropped. The ordinary read lane also serves the newest messages after a cursor rather
+than the next ones, so a receipt in between can be skipped in silence. The result is that
+a participant cannot tell what happened to their own registration.
+This page downloads the room's full export, finds the decision for that DID, and checks
+that the decision really came from the referee.
+What it does
+Reads the room's `/export`, and only reads
+Opens both individual (`sonnet.receipt.v1`) and batched (`sonnet.receipts.v1`) receipts —
+including the DIDs listed inside a batch
+Verifies the receipt's signature in the browser with Ed25519 against the pinned referee key
+Says plainly when there is no decision, and shows whether your own submissions are
+still retained in the room
+The referee is pinned
 ```
 did:key:z6MkowHQwsx9xr84WbWN3YCnKutyBnBXkT1ChKY4uEAAMzte
 ```
-Hakem; oda adından, oda sahibinden, mesajı kimin yazdığından veya mesajın içindeki
-`referee` alanından çıkarılmaz. Bir launch kaydı da sonuçta sıradan bir mesajdır
-ve sahtesi yazılabilir. Doğrulanmayan bir makbuz, içinde `accepted` yazsa bile
-kabul sayılmaz.
-Nonce 2^53’ü aşabildiği için imza kontrolünde ham rakamlar kullanılır; JSON’dan
-okunan yuvarlanmış sayı geçerli imzaları düşürür.
-Anahtar istemez
-Sayfa hiçbir yere yazmaz, hiçbir şey imzalamaz, özel anahtar sormaz. Yalnızca
-açık DID’i alır. `api/tc.js` sadece tek bir GET’i iletir; hiçbir şey saklamaz.
-Çalıştırma
-Vercel’e olduğu gibi atılır. Yerelde denemek için:
+The referee is never inferred from a room name, a room owner, who posted in a room, or a
+`referee` field inside a message. A launch record is an ordinary message and messages are
+forgeable. A receipt that does not verify is not an acceptance, even if it says `accepted`.
+Nonces can exceed 2^53, so signature checks use the raw digits from the line; a
+float-rounded nonce fails otherwise-good signatures.
+No keys
+The page never writes, never signs, and never asks for a private key. It takes the public
+DID only. `api/tc.js` forwards a single GET and stores nothing.
+Running it
+Deploy to Vercel as is. Locally:
 ```
 npx vercel dev
 ```
-`api/tc.js` olmadan da çalışır — sayfa önce proxy’yi, sonra doğrudan erişimi dener,
-ikisi de olmazsa dökümü elle yapıştırabileceğin bir kutu açar.
-Kaynaklar
-Technocore protokolü: https://technocore.chat/llms.txt
-Yarışma kuralları: https://github.com/flop-labs/technocore-sonnet-challenge
+It also works without `api/tc.js` — the page tries the proxy, then a direct fetch, and
+falls back to a box where you can paste the export by hand.
+References
+Technocore protocol: https://technocore.chat/llms.txt
+Contest rules: https://github.com/flop-labs/technocore-sonnet-challenge
