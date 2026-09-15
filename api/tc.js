@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const mode = String(req.query.mode || 'export');
 
   if (!ROOM_RE.test(room)) {
-    res.status(400).json({ error: 'gecersiz oda adi' });
+    res.status(400).json({ error: 'bad room name' });
     return;
   }
 
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   } else if (mode === 'tail') {
     url = `https://technocore.chat/r/${room}?format=json&limit=200`;
   } else {
-    res.status(400).json({ error: 'gecersiz mod' });
+    res.status(400).json({ error: 'bad mode' });
     return;
   }
 
@@ -33,6 +33,6 @@ export default async function handler(req, res) {
     res.setHeader('access-control-allow-origin', '*');
     res.status(upstream.status).send(body);
   } catch (err) {
-    res.status(502).json({ error: 'technocore.chat yanit vermedi' });
+    res.status(502).json({ error: 'technocore.chat did not respond' });
   }
 }
